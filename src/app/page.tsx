@@ -1,23 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { track, identify, reset, type EventProperties } from "@/lib/analytics";
+import { ampli } from "@/ampli";
+import { identifyUser, resetSession } from "@/lib/analytics";
 
 type LogEntry = {
   id: number;
   timestamp: string;
   name: string;
-  properties?: EventProperties;
+  properties?: Record<string, unknown>;
 };
-
-const apiKeyConfigured = Boolean(process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY);
 
 export default function Home() {
   const [log, setLog] = useState<LogEntry[]>([]);
-  const [counter, setCounter] = useState(0);
 
-  function record(name: string, properties?: EventProperties) {
-    track(name, properties);
+  function record(name: string, properties?: Record<string, unknown>) {
     setLog((prev) =>
       [
         {
@@ -36,66 +33,55 @@ export default function Home() {
       <header className="mb-10">
         <h1 className="text-3xl font-semibold tracking-tight">Ampli CLI Test App</h1>
         <p className="mt-2 text-sm text-neutral-500">
-          A minimal Next.js sandbox for exercising the Amplitude{" "}
-          <code className="font-mono">ampli</code> CLI workflow — pull, status, push.
+          Each button fires a typed event from{" "}
+          <code className="font-mono">src/ampli/index.ts</code>. The static call is what
+          {" "}
+          <code className="font-mono">ampli status</code> looks for in CI.
         </p>
-        <div
-          className={`mt-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs ${
-            apiKeyConfigured
-              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-              : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
-          }`}
-        >
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              apiKeyConfigured ? "bg-emerald-500" : "bg-amber-500"
-            }`}
-          />
-          {apiKeyConfigured
-            ? "NEXT_PUBLIC_AMPLITUDE_API_KEY detected"
-            : "No API key set — events log locally only"}
-        </div>
       </header>
 
       <section className="grid gap-3 sm:grid-cols-2">
         <ActionButton
-          title="Button Clicked"
-          description="Generic interaction event"
+          title="Evento1"
+          description="Required: eje, Propiedad1"
           onClick={() => {
-            const next = counter + 1;
-            setCounter(next);
-            record("Button Clicked", { label: "primary", clickIndex: next });
+            const props = { eje: "axis-1", Propiedad1: "valor-uno" };
+            ampli.evento1(props);
+            record("Evento1", props);
           }}
         />
         <ActionButton
-          title="User Signed Up"
-          description="Identify + track in one shot"
+          title="Evento 2"
+          description="Required: je (string[])"
           onClick={() => {
-            const userId = `user_${Math.floor(Math.random() * 100000)}`;
-            identify(userId, { plan: "free", source: "test-app" });
-            record("User Signed Up", { userId, plan: "free" });
+            const props = { je: ["alpha", "beta", "gamma"] };
+            ampli.evento2(props);
+            record("Evento 2", props);
           }}
         />
         <ActionButton
-          title="Item Purchased"
-          description="Event with numeric properties"
-          onClick={() =>
-            record("Item Purchased", {
-              sku: "SKU-1234",
-              price: 19.99,
-              currency: "USD",
-            })
-          }
+          title="eventoConArray"
+          description="Optional: arrayBien, arrayString"
+          onClick={() => {
+            const props = {
+              arrayBien: ["uno", "dos", "tres"],
+              arrayString: "single",
+            };
+            ampli.eventoConArray(props);
+            record("eventoConArray", props);
+          }}
         />
         <ActionButton
-          title="Custom Event"
-          description="Free-form event for ad-hoc testing"
-          onClick={() =>
-            record("Custom Event", {
-              firedAt: new Date().toISOString(),
-              random: Math.random().toFixed(4),
-            })
-          }
+          title="PruebaAmpli"
+          description="Optional: propiedad_a_mantener, propiedad_a_mergear"
+          onClick={() => {
+            const props = {
+              propiedad_a_mantener: "keep",
+              propiedad_a_mergear: "merge",
+            };
+            ampli.pruebaAmpli(props);
+            record("PruebaAmpli", props);
+          }}
         />
       </section>
 
@@ -103,8 +89,19 @@ export default function Home() {
         <button
           type="button"
           onClick={() => {
-            reset();
-            record("Session Reset");
+            const userId = `user_${Math.floor(Math.random() * 100000)}`;
+            identifyUser(userId, { email: `${userId}@example.com` });
+            record("identify()", { userId });
+          }}
+          className="rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+        >
+          Identify random user
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            resetSession();
+            record("session reset");
           }}
           className="rounded-md border border-neutral-300 dark:border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
         >
