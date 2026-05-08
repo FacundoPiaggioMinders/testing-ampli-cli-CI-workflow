@@ -1,0 +1,17 @@
+name: Ampli Implementation Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: amplitudeinc/ampli-all
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Verify analytics implementation and update status in Data
+        run: ampli status -t ${{ secrets.AMPLITUDE_API_TOKEN }} --update
