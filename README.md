@@ -1,4 +1,5 @@
 # testing-ampli-cli-CI-workflow
+this is a test
 
 A small Next.js (App Router, TypeScript, Tailwind v4) sandbox for exercising the Amplitude
 [Ampli CLI](https://www.docs.developers.amplitude.com/data/ampli/) and validating it inside a CI
